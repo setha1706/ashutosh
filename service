@@ -1,0 +1,91 @@
+You have deployed an application, that is listening at port 8080. You used a replica-set to deploy it and created a NodePort service to make it accessible. But when you test it, somehow the application is not reachable at the port. Write down your approach and sequentially all the steps that you will take to find out the issue.
+##########################################################################################
+Deploying pod which is listening on 8080 port.
+[root@ip-172-31-41-182 05-services]# cat kubia-replicaset1.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: payment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+      - name: kubia
+        image: luksa/kubia
+[root@ip-172-31-41-182 05-services]#
+[root@ip-172-31-41-182 05-services]# kubectl apply -f kubia-replicaset1.yaml
+replicaset.apps/payment created
+[root@ip-172-31-41-182 05-services]# kubectl get po
+NAME            READY   STATUS              RESTARTS   AGE
+payment-2rbdk   1/1     Running             0          7s
+payment-dx4f7   1/1     Running             0          7s
+payment-kc7fx   0/1     ContainerCreating   0          7s
+[root@ip-172-31-41-182 05-services]# kubectl get po
+NAME            READY   STATUS    RESTARTS   AGE
+payment-2rbdk   1/1     Running   0          10s
+payment-dx4f7   1/1     Running   0          10s
+payment-kc7fx   1/1     Running   0          10s
+[root@ip-172-31-41-182 05-services]#
+
+
+[root@ip-172-31-41-182 05-services]# kubectl get po -o wide
+NAME            READY   STATUS    RESTARTS   AGE   IP               NODE                                               NOMINATED NODE   READINESS GATES
+payment-2rbdk   1/1     Running   0          26s   192.168.76.125   ip-172-31-35-118.ap-southeast-1.compute.internal   <none>           <none>
+payment-dx4f7   1/1     Running   0          26s   192.168.76.127   ip-172-31-35-118.ap-southeast-1.compute.internal   <none>           <none>
+payment-kc7fx   1/1     Running   0          26s   192.168.76.70    ip-172-31-35-118.ap-southeast-1.compute.internal   <none>           <none>
+[root@ip-172-31-41-182 05-services]# curl 192.168.76.125:8080
+You've hit payment-2rbdk
+[root@ip-172-31-41-182 05-services]# curl 52.221.232.35:8080
+curl: (7) Failed to connect to 52.221.232.35 port 8080 after 0 ms: Couldn't connect to server
+[root@ip-172-31-41-182 05-services]#
+
+Pod created which is reachable on port 8080 on its own IP but not reachable locally.
+[root@ip-172-31-41-182 05-services]# curl 0.0.0.0:8000
+curl: (7) Failed to connect to 0.0.0.0 port 8000 after 0 ms: Couldn't connect to server
+[root@ip-172-31-41-182 05-services]#
+
+So creating node port "30123" so that pod reachable locaaly as well as on public IP.
+
+[root@ip-172-31-41-182 05-services]# cat kubia-svc-nodeport1.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubia-nodeport
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30123
+  selector:
+    app: payment
+
+[root@ip-172-31-41-182 05-services]# kubectl apply -f kubia-svc-nodeport1.yaml
+service/kubia-nodeport created
+[root@ip-172-31-41-182 05-services]# kubectl get svc
+NAME             TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubia-nodeport   NodePort   10.102.207.149   <none>        80:30123/TCP   6s
+[root@ip-172-31-41-182 05-services]# kubectl get ep
+NAME             ENDPOINTS                                                    AGE
+kubia-nodeport   192.168.76.125:8080,192.168.76.127:8080,192.168.76.70:8080   16s
+[root@ip-172-31-41-182 05-services]# curl 52.221.232.35:30123
+You've hit payment-kc7fx
+[root@ip-172-31-41-182 05-services]# curl 0.0.0.0:30123
+You've hit payment-2rbdk
+[root@ip-172-31-41-182 05-services]# curl 10.102.207.149:80
+You've hit payment-kc7fx
+[root@ip-172-31-41-182 05-services]# kubectl get po
+NAME            READY   STATUS    RESTARTS   AGE
+payment-2rbdk   1/1     Running   0          5m18s
+payment-dx4f7   1/1     Running   0          5m18s
+payment-kc7fx   1/1     Running   0          5m18s
+[root@ip-172-31-41-182 05-services]#
+
+
