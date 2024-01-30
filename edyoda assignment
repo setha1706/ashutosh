@@ -1,0 +1,24 @@
+Write a common use-case, where you will use a daemon set instead of replica set.
+DaemonSets is used when a single copy of application must run on all or a subset of the nodes in the cluster, Like monitoring of nodes.
+[root@ip-172-31-41-182 04-controllers]# kubectl apply -f ssd-monitor-daemonset.yaml
+daemonset.apps/ssd-monitor created
+[root@ip-172-31-41-182 04-controllers]# kubectl get ds
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ssd-monitor   0         0         0       0            0           disk=ssd        5s
+[root@ip-172-31-41-182 04-controllers]# kubectl get po
+No resources found in ash namespace.
+[root@ip-172-31-41-182 04-controllers]# kubectl get nodes --show-labels
+NAME                                               STATUS   ROLES    AGE   VERSION   LABELS
+ip-172-31-35-118.ap-southeast-1.compute.internal   Ready    <none>   11d   v1.18.5   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-172-31-35-118.ap-southeast-1.compute.internal,kubernetes.io/os=linux
+ip-172-31-41-182.ap-southeast-1.compute.internal   Ready    master   11d   v1.18.5   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-172-31-41-182.ap-southeast-1.compute.internal,kubernetes.io/os=linux,node-role.kubernetes.io/master=
+[root@ip-172-31-41-182 04-controllers]#
+
+No worker node showing as label is different.
+[root@ip-172-31-41-182 04-controllers]# kubectl label nodes ip-172-31-35-118.ap-southeast-1.compute.internal disk=ssd
+node/ip-172-31-35-118.ap-southeast-1.compute.internal labeled
+[root@ip-172-31-41-182 04-controllers]#
+[root@ip-172-31-41-182 04-controllers]# kubectl get ds
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ssd-monitor   1         1         1       1            1           disk=ssd        8m38s
+[root@ip-172-31-41-182 04-controllers]#
+ So any new nodes having same label SSD shwoing now.
