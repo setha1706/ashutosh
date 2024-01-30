@@ -1,0 +1,204 @@
+1. go to root (cd /root/ ) . (both Master and Worker can perform this in their instances)
+
+2. git clone https://github.com/ashishrpandey/example-voting-app
+
+3. go to /root/example-voting-app/k8s-specifications
+
+4. [root@ip-172-31-7-102 k8s-specifications]# kubectl apply -f .
+
+[root@ip-172-31-41-182 04-controllers]# cd $home
+[root@ip-172-31-41-182 ~]# git clone https://github.com/ashishrpandey/example-voting-app
+Cloning into 'example-voting-app'...
+remote: Enumerating objects: 494, done.
+remote: Total 494 (delta 0), reused 0 (delta 0), pack-reused 494
+Receiving objects: 100% (494/494), 236.18 KiB | 12.43 MiB/s, done.
+Resolving deltas: 100% (179/179), done.
+[root@ip-172-31-41-182 ~]# cd /root/example-voting-app/k8s-specifications
+[root@ip-172-31-41-182 k8s-specifications]#
+[root@ip-172-31-41-182 k8s-specifications]#
+[root@ip-172-31-41-182 k8s-specifications]#
+[root@ip-172-31-41-182 k8s-specifications]# ls -lrth
+total 36K
+-rw-r--r-- 1 root root 299 Jan 30 12:12 result-deployment.yaml
+-rw-r--r-- 1 root root 152 Jan 30 12:12 redis-service.yaml
+-rw-r--r-- 1 root root 402 Jan 30 12:12 redis-deployment.yaml
+-rw-r--r-- 1 root root 146 Jan 30 12:12 db-service.yaml
+-rw-r--r-- 1 root root 401 Jan 30 12:12 db-deployment.yaml
+-rw-r--r-- 1 root root 292 Jan 30 12:12 worker-deployment.yaml
+-rw-r--r-- 1 root root 192 Jan 30 12:12 vote-service.yaml
+-rw-r--r-- 1 root root 289 Jan 30 12:12 vote-deployment.yaml
+-rw-r--r-- 1 root root 195 Jan 30 12:12 result-service.yaml
+[root@ip-172-31-41-182 k8s-specifications]# kubectl apply -f .
+deployment.apps/db created
+service/db created
+deployment.apps/redis created
+service/redis created
+deployment.apps/result created
+service/result created
+deployment.apps/vote created
+service/vote created
+deployment.apps/worker created
+[root@ip-172-31-41-182 k8s-specifications]#
+
+5. for voting and result pods, Observe that NodePort is assigned.
+yes its assigned and able yo open it in browser
+http://52.221.232.35:31000/
+Processed by container ID vote-94849dc97-srm8x
+[root@ip-172-31-41-182 k8s-specifications]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-7d2dx        1/1     Running   0          17m
+redis-868d64d78-f7dqb     1/1     Running   0          17m
+result-5d57b59f4b-4x7zf   1/1     Running   0          17m
+ssd-monitor-n6tgb         1/1     Running   0          25m
+vote-94849dc97-srm8x      1/1     Running   0          17m
+worker-dd46d7584-567wq    1/1     Running   0          17m
+[root@ip-172-31-41-182 k8s-specifications]#
+
+
+http://52.221.232.35:31001/
+
+
+[root@ip-172-31-41-182 k8s-specifications]# kubectl logs vote-94849dc97-srm8x
+[2024-01-30 12:12:40 +0000] [1] [INFO] Starting gunicorn 21.2.0
+[2024-01-30 12:12:40 +0000] [1] [INFO] Listening at: http://0.0.0.0:80 (1)
+[2024-01-30 12:12:40 +0000] [1] [INFO] Using worker: sync
+[2024-01-30 12:12:40 +0000] [7] [INFO] Booting worker with pid: 7
+[2024-01-30 12:12:40 +0000] [8] [INFO] Booting worker with pid: 8
+[2024-01-30 12:12:40 +0000] [9] [INFO] Booting worker with pid: 9
+[2024-01-30 12:12:40 +0000] [10] [INFO] Booting worker with pid: 10
+172.31.35.118 - - [30/Jan/2024:12:18:08 +0000] "GET / HTTP/1.1" 200 1293 "-" "curl/8.3.0"
+192.168.40.192 - - [30/Jan/2024:12:27:37 +0000] "GET / HTTP/1.1" 200 1293 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:27:37 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 200 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:27:38 +0000] "GET /favicon.ico HTTP/1.1" 404 207 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[2024-01-30 12:27:44,697] INFO in app: Received vote for a
+[2024-01-30 12:27:44 +0000] [9] [INFO] Received vote for a
+192.168.40.192 - - [30/Jan/2024:12:27:44 +0000] "POST / HTTP/1.1" 200 1696 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:27:44 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[2024-01-30 12:27:50,039] INFO in app: Received vote for b
+[2024-01-30 12:27:50 +0000] [7] [INFO] Received vote for b
+192.168.40.192 - - [30/Jan/2024:12:27:50 +0000] "POST / HTTP/1.1" 200 1696 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:27:50 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[2024-01-30 12:28:04 +0000] [1] [CRITICAL] WORKER TIMEOUT (pid:10)
+[2024-01-30 12:28:04 +0000] [10] [INFO] Worker exiting (pid: 10)
+[2024-01-30 12:28:04 +0000] [1] [ERROR] Worker (pid:10) exited with code 1
+[2024-01-30 12:28:04 +0000] [1] [ERROR] Worker (pid:10) exited with code 1.
+[2024-01-30 12:28:04 +0000] [11] [INFO] Booting worker with pid: 11
+[2024-01-30 12:29:36,228] INFO in app: Received vote for a
+[2024-01-30 12:29:36 +0000] [9] [INFO] Received vote for a
+192.168.40.192 - - [30/Jan/2024:12:29:36 +0000] "POST / HTTP/1.1" 200 1696 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:29:36 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[2024-01-30 12:32:25,470] INFO in app: Received vote for b
+[2024-01-30 12:32:25 +0000] [8] [INFO] Received vote for b
+192.168.40.192 - - [30/Jan/2024:12:32:25 +0000] "POST / HTTP/1.1" 200 1696 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:32:25 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[2024-01-30 12:32:27,255] INFO in app: Received vote for a
+[2024-01-30 12:32:27 +0000] [11] [INFO] Received vote for a
+192.168.40.192 - - [30/Jan/2024:12:32:27 +0000] "POST / HTTP/1.1" 200 1696 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:32:27 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[2024-01-30 12:32:28,409] INFO in app: Received vote for b
+[2024-01-30 12:32:28 +0000] [8] [INFO] Received vote for b
+192.168.40.192 - - [30/Jan/2024:12:32:28 +0000] "POST / HTTP/1.1" 200 1696 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+192.168.40.192 - - [30/Jan/2024:12:32:28 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://52.221.232.35:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"
+[root@ip-172-31-41-182 k8s-specifications]#
+
+8. Now try to delete the Pods one by one (first voting Pod, then worker pod, then db pod) and see what happens to the voting and result app after deleting.
+
+:> after deleting voting app, nconnectivity issue observed for result app while connectivity issue observed momentry and connected to new pod.
+
+[root@ip-172-31-41-182 ec2-user]# kubectl get po -w
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-7d2dx        1/1     Running   0          41m
+redis-868d64d78-f7dqb     1/1     Running   0          41m
+result-5d57b59f4b-4x7zf   1/1     Running   0          41m
+ssd-monitor-n6tgb         1/1     Running   0          48m
+vote-94849dc97-6lgfx      1/1     Running   0          20s
+worker-dd46d7584-567wq    1/1     Running   0          41m
+
+
+:> when deleting resulting pod ,no connectivity issue observed.
+[root@ip-172-31-41-182 ec2-user]# kubectl delete po result-5d57b59f4b-4x7zf
+pod "result-5d57b59f4b-4x7zf" deleted
+^C
+[root@ip-172-31-41-182 ec2-user]# kubectl get po -w
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-7d2dx        1/1     Running       0          52m
+redis-868d64d78-f7dqb     1/1     Running       0          52m
+result-5d57b59f4b-4x7zf   0/1     Terminating   0          52m
+result-5d57b59f4b-jvlrt   1/1     Running       0          6s
+ssd-monitor-n6tgb         1/1     Running       0          60m
+vote-94849dc97-6lgfx      1/1     Running       0          12m
+worker-dd46d7584-567wq    1/1     Running       0          52m
+result-5d57b59f4b-4x7zf   0/1     Terminating   0          52m
+result-5d57b59f4b-4x7zf   0/1     Terminating   0          52m
+
+^C[root@ip-172-31-41-182 ec2-user]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-7d2dx        1/1     Running   0          53m
+redis-868d64d78-f7dqb     1/1     Running   0          53m
+result-5d57b59f4b-jvlrt   1/1     Running   0          51s
+ssd-monitor-n6tgb         1/1     Running   0          61m
+vote-94849dc97-6lgfx      1/1     Running   0          12m
+worker-dd46d7584-567wq    1/1     Running   0          53m
+[root@ip-172-31-41-182 ec2-user]#
+
+
+10. what happens after db pod deletion.
+
+:> deleting db pod, both voting and result pod got restart. One observation, post deletion % voting for cats/dog showing changed to 50% while earlier it was 100/0 %. New db pod created as while crateion RS is being used for craeting db pod.
+
+[root@ip-172-31-41-182 ec2-user]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-7d2dx        1/1     Running   0          55m
+redis-868d64d78-f7dqb     1/1     Running   0          55m
+result-5d57b59f4b-jvlrt   1/1     Running   0          2m59s
+ssd-monitor-n6tgb         1/1     Running   0          63m
+vote-94849dc97-6lgfx      1/1     Running   0          14m
+worker-dd46d7584-567wq    1/1     Running   0          55m
+[root@ip-172-31-41-182 ec2-user]# kubectl delete po db-b54cd94f4-7d2dx
+pod "db-b54cd94f4-7d2dx" deleted
+^C
+[root@ip-172-31-41-182 ec2-user]# kubectl get po -w
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-7d2dx        1/1     Terminating   0          55m
+db-b54cd94f4-llt4z        1/1     Running       0          6s
+redis-868d64d78-f7dqb     1/1     Running       0          55m
+result-5d57b59f4b-jvlrt   1/1     Running       0          3m17s
+ssd-monitor-n6tgb         1/1     Running       0          63m
+vote-94849dc97-6lgfx      1/1     Running       0          15m
+worker-dd46d7584-567wq    1/1     Running       0          55m
+
+^C[root@ip-172-31-41-182 ec2-user]# kubectl get po -w
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-7d2dx        0/1     Terminating   0          56m
+db-b54cd94f4-llt4z        1/1     Running       0          38s
+redis-868d64d78-f7dqb     1/1     Running       0          56m
+result-5d57b59f4b-jvlrt   1/1     Running       1          3m49s
+ssd-monitor-n6tgb         1/1     Running       0          64m
+vote-94849dc97-6lgfx      1/1     Running       0          15m
+worker-dd46d7584-567wq    1/1     Running       1          56m
+db-b54cd94f4-7d2dx        0/1     Terminating   0          56m
+db-b54cd94f4-7d2dx        0/1     Terminating   0          56m
+^C[root@ip-172-31-41-182 ec2-user]# kubectl get po -w
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-llt4z        1/1     Running   0          78s
+redis-868d64d78-f7dqb     1/1     Running   0          57m
+result-5d57b59f4b-jvlrt   1/1     Running   1          4m29s
+ssd-monitor-n6tgb         1/1     Running   0          64m
+vote-94849dc97-6lgfx      1/1     Running   0          16m
+worker-dd46d7584-567wq    1/1     Running   1          57m
+
+[root@ip-172-31-41-182 ec2-user]# kubectl get rs
+NAME                DESIRED   CURRENT   READY   AGE
+db-b54cd94f4        1         1         1       61m
+redis-868d64d78     1         1         1       61m
+result-5d57b59f4b   1         1         1       61m
+vote-94849dc97      1         1         1       61m
+worker-dd46d7584    1         1         1       61m
+[root@ip-172-31-41-182 ec2-user]#
+
+
+
+
+
+
+
